@@ -1,0 +1,105 @@
+### Reading History API Test Script
+### This file contains HTTP requests to test the reading history API endpoints
+### You can use REST Client extension in VS Code to run these requests
+
+@baseUrl = http://localhost:3000/api
+@authToken = YOUR_AUTH_TOKEN_HERE
+@userId = USER_ID_HERE
+@storyId = STORY_ID_HERE
+@chapterId = CHAPTER_ID_HERE
+
+### 1. Login to get authentication token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Store the auth token from the login response
+@authToken = {{login.response.body.data.token}}
+@userId = {{login.response.body.data.user.id}}
+
+### 2. Get all stories to find a story ID for testing
+# @name getAllStories
+GET {{baseUrl}}/stories
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Store a story ID from the response
+@storyId = {{getAllStories.response.body.data.stories[0].id}}
+
+### 3. Get chapters for the selected story to find a chapter ID
+# @name getStoryChapters
+GET {{baseUrl}}/stories/{{storyId}}/chapters
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### Store a chapter ID from the response
+@chapterId = {{getStoryChapters.response.body.data.chapters[0].id}}
+
+### 4. Manually record reading history
+POST {{baseUrl}}/reading-history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "storyId": "{{storyId}}",
+  "chapterId": "{{chapterId}}",
+  "progress": 25,
+  "currentChapterNumber": 1
+}
+
+### 5. Get user's reading history
+GET {{baseUrl}}/reading-history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 6. Get reading history with pagination
+GET {{baseUrl}}/reading-history?page=1&limit=5
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 7. Get reading history for a specific story
+GET {{baseUrl}}/reading-history/story/{{storyId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 8. Update reading history with new progress
+POST {{baseUrl}}/reading-history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "storyId": "{{storyId}}",
+  "chapterId": "{{chapterId}}",
+  "progress": 50,
+  "currentChapterNumber": 2
+}
+
+### 9. Delete reading history for a specific story
+DELETE {{baseUrl}}/reading-history/story/{{storyId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 10. Clear all reading history
+DELETE {{baseUrl}}/reading-history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 11. Verify reading history is automatically recorded when viewing a story
+GET {{baseUrl}}/stories/{{storyId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 12. Verify reading history is automatically recorded when reading a chapter
+GET {{baseUrl}}/chapters/{{chapterId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 13. Check reading history again to verify automatic recording
+GET {{baseUrl}}/reading-history
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
